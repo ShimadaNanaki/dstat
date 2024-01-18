@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" style="background-color:#121212; max-width:100%;height:auto;">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test - Graph</title>
+<link rel="stylesheet" href="style.css">
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+<link rel="shortcut icon" href="favicon.ico" />
+<script src="highcharts.js"></script>
+<script src="exporting.js"></script>
+<script language="JavaScript">
+query = getQueryParams(window.location.href)
+        $(function() {
+            var mychart;
+            var previous = null;
+            var prevTime = null;
+            var count = 0;
+            var extra = [
+                'L7 Live Requests',
+                `Requests to: Test.org`,
+            ];
+
+            $(window).load(function(){
+                initiateChart("container");
+                parseFile();
+            });
+
+            function parseFile()
+            {
+               fetch("../nginx_status") // change this to your nginx status page ! ! !
+            .then(function (response) {
+              return response.text();
+            }).then(function (data) {
+                    var current = 0;
+                    var part = data.split(' ')[9];
+                    var series = mychart.series[0],
+                    currTime = Date.now(),
+                    current = parseInt(part);
+                    shift = series.data.length > 40; 
+
+
+
+                    if(prevTime != null && currTime - prevTime > 3000){
+                        series.addPoint(
+                            [Math.floor($.now()), 
+                                -1
+                            ],
+                            true, 
+                            shift
+                        );
+                    } else {
+                        
+                        if (previous !== null) {                        
+                            series.addPoint(
+                                [Math.floor($.now()), 
+                                    current-previous
+                                ],
+                                true, 
+                                shift
+                            );
+                        }
+                    }
+                    previous = current;
+                    count++;
+                    // call it again after one second
+                    
+                    prevTime = Date.now()
+                    setTimeout(parseFile, 1000); 
+
+                }).catch(function (err) {
+                console.log(err);
+              setTimeout(parseFile, 1000);
+            });
+        }
+
+            function initiateChart(divid)
+            {
+                Highcharts.createElement('link', {
+                   href: '//fonts.googleapis.com/css?family=Unica+One',
+                   rel: 'stylesheet',
+                   type: 'text/css'
+                }, null, document.getElementsByTagName('head')[0]);
+                
+                var options = {
+                    colors: ["#FF0000", "#90ee7e", "#f45b5b", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee", "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
+                    chart: {
+                    zoomType: '',
+                    renderTo: divid,
+                    style: {
+                        fontFamily: "'Unica One', sans-serif",
+
+                    },
+                    plotBorderColor: '#606063',
+
+
+                    backgroundColor: {
+                            linearGradient: { x1: 0, y1: 0, x2: 1, y2: 0 },
+                            stops: [
+                                [0, '#121212'],
+                                [1, '#121212']
+                            ]
+                        },
+
+
+                },
+                    title: {
+                        text: extra[0],
+                        style: {
+                            color: '#E0E0E3',
+                            textTransform: 'uppercase',
+                            fontSize: '20px'
+                        }
+                    },
+                    subtitle: {
+                        text: extra[1],
+                        style: {
+                            color: '#E0E0E3',
+                            textTransform: 'uppercase'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                        style: {
+                            color: '#F0F0F0'
+                        },
+                        crosshairs: [
+                            {
+                                width: 1,
+                                color: '#A5A5A5'
+                            },
+                            {
+                                width: 1,
+                                color: '#A5A5A5'
+                            }
+                        ]
+                    },
+                    plotOptions: {
+                        series: {
+                            dataLabels: {
+                                color: '#B0B0B3'
+                            },
+                            marker: {
+                                lineColor: '#200'
+                            }
+                        },
+                        area: {
+                            fillColor: {
+                                linearGradient: {
+                                    x1: 0,
+                                    y1: 0,
+                                    x2: 0,
+                                    y2: 1
+                                },
+                                stops: [
+                                    [0, '#FF0000'],
+                                    [0, '#FF0000'],
+                                ]
+                            },
+                            marker: {
+                                radius: 2
+                            },
+                            lineWidth: 1,
+                            states: {
+                                hover: {
+                                    lineWidth: 1
+                                }
+                            },
+                            threshold: null
+                        }
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    navigation: {
+                        buttonOptions: {
+                            symbolStroke: '#DDDDDD',
+                            theme: {
+                                fill: '#505053'
+                            }
+                        }
+                    },
+                    
+                    
+                    
+                    yAxis: {
+                        gridLineColor: '#707073',
+                        labels: {
+                            style: {
+                                color: '#E0E0E3'
+                            }
+                        },
+                        lineColor: '#707073',
+                        minorGridLineColor: '#505053',
+                        tickColor: '#707073',
+                        tickWidth: 1,
+                        title: {
+                            text: extra[2],
+                            style: {
+                                color: '#A0A0A3'
+                            }
+                        }
+                    },
+
+                    xAxis: {
+                        type: 'datetime',
+                        dateTimeLabelFormats: {
+                            day: '%a'
+                        },
+                        gridLineColor: '#707073',
+                        labels: {
+                            style: {
+                                color: '#E0E0E3'
+                            }
+                        },
+                        lineColor: '#505053',
+                        minorGridLineColor: '#505053',
+                        tickColor: '#505053',
+                        title: {
+                            style: {
+                                color: '#A0A0A3'
+                            }
+                        }
+                    },
+
+                    series: [{
+                        type: 'area',
+                        name: 'Requests',
+                        data: []
+                    }]
+                };
+
+                mychart = new Highcharts.Chart(options);
+                
+                
+            }
+
+        });
+        
+function copyTextFromElement(elementID) {
+  let element = document.getElementById(elementID);
+  let elementText = element.textContent;
+  copyText(elementText);
+}
+function copyText(text) {
+  navigator.clipboard.writeText(text);
+}
+function getQueryParams(url) {
+    const paramArr = url.slice(url.indexOf('?') + 1).split('&');
+    const params = {};
+    paramArr.map(param => {
+        const [key, val] = param.split('=');
+        params[key] = decodeURIComponent(val);
+    })
+    return params;
+}
+    </script>
+<style type="text/css" media="screen">
+a:link { color:#ffffff; text-decoration: none; }
+a:visited { color:#ffffff; text-decoration: none; }
+a:hover { color:#ffffff; text-decoration: none; }
+a:active { color:#ffffff; text-decoration: underline; }
+</style>
+</head>
+<body>
+<center>
+<div id="container" style="width: 1000px; height: 500px; margin: 0 auto; margin-top: 15px;"></div>
+<br>
+<MARQUEE WIDTH="20px" direction="right"><font color="red">>></font></MARQUEE>
+<font id="domain" color="white">https://Test.org</font>
+<MARQUEE WIDTH="20px" direction="left"><font color="red"><<</font></MARQUEE>
+<br><br>
+<button class="button" onclick="copyTextFromElement('domain')">Copy URL</button>
+<br><br>
+</center>
+</body>
+</html>
